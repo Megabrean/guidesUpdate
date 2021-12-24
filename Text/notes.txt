@@ -1,0 +1,22 @@
+{u'FkLine__dpAR_1:Guide_Base': 
+    {'fatherMirrorAxis': '', 
+    'guideModuleNamespace': u'FkLine__dpAR_1', 
+    'fatherModule': '',
+    'fatherCustomName': '',
+    'fatherNode': '',
+    'parentNode': '',
+    'guideInstance': u'dpAR_1',
+    'guideMirrorAxis': u'off', 
+    'fatherMirrorName': '', 
+    'childrenList': [], 
+    'fatherGuideLoc': '', 
+    'guideCustomName': u'MinhaFK', 
+    'fatherGuide': '', 
+    'fatherInstance': '', 
+    'guideModuleName': u'FkLine', 
+    'guideMirrorName': [u'L_', u'R_']}
+}
+
+[u'pinGuide', u'pinGuideConstraint', u'guideBase', u'mirrorEnable', u'displayAnnotation', u'guideColor', u'moduleNamespace', u'customName', u'mirrorAxis', u'mirrorName', u'mirrorNameList', u'hookNode', u'moduleInstanceInfo', u'guideObjectInfo', u'rigType', u'dpARVersion', u'shapeSize', u'degree', u'nJoints', u'type', u'hasBend', u'numBendJoints', u'style', u'alignWorld', u'articulation', u'additional']
+
+{'Limb__dpAR_1:Guide_Base': {u'displayAnnotation': True, u'numBendJoints': 5, u'moduleNamespace': u'Limb__dpAR_1', u'hookNode': u'_Grp', u'moduleInstanceInfo': u'<dpAutoRigSystem.Modules.dpLimb.Limb instance at 0x0000012198FD5E08>', u'rigType': u'biped', u'hasBend': True, u'mirrorName': u'L --> R', u'additional': False, u'guideBase': True, u'mirrorEnable': True, u'guideColor': 0, u'type': 0, u'mirrorNameList': u'L --> R;R --> L;T --> B;B --> T;F --> B;B --> F;', u'degree': 0, u'articulation': True, u'style': 0, u'mirrorAxis': u'off', u'shapeSize': 1.0, u'nJoints': 0, u'pinGuide': False, u'customName': None, u'dpARVersion': u'3.11.33', u'alignWorld': True, u'pinGuideConstraint': '', u'guideObjectInfo': u"<module 'dpAutoRigSystem.Modules.dpLimb' from 'C:/Users/megab/Documents/maya/scripts\\dpAutoRigSystem\\Modules\\dpLimb.pyc'>"}}
