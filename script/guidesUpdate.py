@@ -90,12 +90,41 @@ def updateGuides():
                     hookDic[item]={"guideModuleNamespace":guideModuleNamespace, "guideModuleName":guideModuleName, "guideInstance":guideInstance, "guideCustomName":guideCustomName, "guideMirrorAxis":guideMirrorAxis, "guideMirrorName":guideMirrorName, "fatherGuide":"", "fatherNode":"", "fatherModule":"", "fatherInstance":"", "fatherCustomName":"", "fatherMirrorAxis":"", "fatherMirrorName":"", "fatherGuideLoc":"", "parentNode":parentNode, "childrenList":[]}
         return hookDic
 
+    # Remove objects different from transform and nurbscurbe from list.
+    def filterNurbsCurveAndTransform(mayaObjList):
+        returList = []
+        for obj in mayaObjList:
+            objType = cmds.objectType(obj)
+            if objType == 'nurbsCurve' or objType == 'transform':
+                returList.append(obj)
+        return returList
+    
+    # Remove _Ant items from list of transforms
+    def filterAnt(dpArTransformsList):
+        returList = []
+        for obj in dpArTransformsList:
+            if not '_Ant' in obj:
+                returList.append(obj)
+        return returList
+
     def getAttrValue(baseGuide, attr):
         try:
             return cmds.getAttr(baseGuide+'.'+attr, silent=True)
         except:
             return ''
-    # Recebe o dicionário com as guias e busca os atributos do dpAr
+    
+    # Return a list of attributes, keyable and userDefined
+    def keyUserAttrList(objWithAttr):
+        returnList = []
+        keyable = cmds.listAttr(objWithAttr, keyable=True)
+        if keyable:
+            returnList.extend(keyable)
+        userAttr = cmds.listAttr(objWithAttr, userDefined=True)
+        if userAttr:
+            returnList.extend(userAttr)
+        return returnList
+
+    # Receive a dictionary with guides and searches for custom attributes and also keyable attributes
     def getAttribs(guidesDictionary):
         for baseGuide in guidesDictionary:
             guideVersion = cmds.getAttr(baseGuide+'.dpARVersion', silent=True)
@@ -103,25 +132,35 @@ def updateGuides():
             if guideVersion != currentDpArVersion:
                 # Create the database holder where the key is the baseGuide
                 updateData[baseGuide] = {}
-                guideAttrList = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ']
-                # listAttr(baseGuide, userDefined=True, keyable=True) -> pesquisar
-                guideAttrList.extend(cmds.listAttr(baseGuide, userDefined=True))
-                # print(guideAttrList)
+                guideAttrList = keyUserAttrList(baseGuide)
+                # Create de attributes dictionary for each baseGuide
                 updateData[baseGuide]['attributes'] = {}
                 for attribute in guideAttrList:
                     attributeValue = getAttrValue(baseGuide, attribute)
                     updateData[baseGuide]['attributes'][attribute] = attributeValue
+                
+                updateData[baseGuide]['children'] = {}
+                childrenList = cmds.listRelatives(baseGuide, allDescendents=True, children=True, type='transform')
+                childrenList = filterNurbsCurveAndTransform(childrenList)
+                childrenList = filterAnt(childrenList)
+                for child in childrenList:
+                    updateData[baseGuide]['children'][child] = {'attributes': {}}
+                    print(child)
+                    guideAttrList = keyUserAttrList(child)
+                    for attribute in guideAttrList:
+                        attributeValue = getAttrValue(child, attribute)
+                        updateData[baseGuide]['children'][child]['attributes'][attribute] = attributeValue
+                    print(updateData[baseGuide]['children'][child]['attributes'])
+                # print(childrenList)
             else:
                 print('marcar como guia a ser usada')
-            print(updateData[baseGuide]['attributes'])
 
     # Dictionary that will hold data for update
     updateData = {}
     # How to check this on dpAr?
-    currentDpArVersion = '3.12.0'
+    currentDpArVersion = '3.13.00'
     # Receive the guides list from hook function
     guidesDictionary = hook()
-    # print(guidesDictionary)
     # If there are guides on the dictionary go on.
     if len(guidesDictionary) > 0:
         getAttribs(guidesDictionary)
