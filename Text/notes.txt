@@ -1,22 +1,68 @@
-{u'FkLine__dpAR_1:Guide_Base': 
+{FkLine__dpAR_1:Guide_Base': 
     {'fatherMirrorAxis': '', 
-    'guideModuleNamespace': u'FkLine__dpAR_1', 
+    'guideModuleNamespace': FkLine__dpAR_1', 
     'fatherModule': '',
     'fatherCustomName': '',
     'fatherNode': '',
     'parentNode': '',
-    'guideInstance': u'dpAR_1',
-    'guideMirrorAxis': u'off', 
+    'guideInstance': dpAR_1',
+    'guideMirrorAxis': off', 
     'fatherMirrorName': '', 
     'childrenList': [], 
     'fatherGuideLoc': '', 
-    'guideCustomName': u'MinhaFK', 
+    'guideCustomName': MinhaFK', 
     'fatherGuide': '', 
     'fatherInstance': '', 
-    'guideModuleName': u'FkLine', 
-    'guideMirrorName': [u'L_', u'R_']}
+    'guideModuleName': FkLine', 
+    'guideMirrorName': [L_', R_']}
 }
 
-[u'pinGuide', u'pinGuideConstraint', u'guideBase', u'mirrorEnable', u'displayAnnotation', u'guideColor', u'moduleNamespace', u'customName', u'mirrorAxis', u'mirrorName', u'mirrorNameList', u'hookNode', u'moduleInstanceInfo', u'guideObjectInfo', u'rigType', u'dpARVersion', u'shapeSize', u'degree', u'nJoints', u'type', u'hasBend', u'numBendJoints', u'style', u'alignWorld', u'articulation', u'additional']
+[pinGuide', pinGuideConstraint', guideBase', mirrorEnable', displayAnnotation', guideColor', moduleNamespace', customName', mirrorAxis', mirrorName', mirrorNameList', hookNode', moduleInstanceInfo', guideObjectInfo', rigType', dpARVersion', shapeSize', degree', nJoints', type', hasBend', numBendJoints', style', alignWorld', articulation', additional']
 
-{'Limb__dpAR_1:Guide_Base': {u'displayAnnotation': True, u'numBendJoints': 5, u'moduleNamespace': u'Limb__dpAR_1', u'hookNode': u'_Grp', u'moduleInstanceInfo': u'<dpAutoRigSystem.Modules.dpLimb.Limb instance at 0x0000012198FD5E08>', u'rigType': u'biped', u'hasBend': True, u'mirrorName': u'L --> R', u'additional': False, u'guideBase': True, u'mirrorEnable': True, u'guideColor': 0, u'type': 0, u'mirrorNameList': u'L --> R;R --> L;T --> B;B --> T;F --> B;B --> F;', u'degree': 0, u'articulation': True, u'style': 0, u'mirrorAxis': u'off', u'shapeSize': 1.0, u'nJoints': 0, u'pinGuide': False, u'customName': None, u'dpARVersion': u'3.11.33', u'alignWorld': True, u'pinGuideConstraint': '', u'guideObjectInfo': u"<module 'dpAutoRigSystem.Modules.dpLimb' from 'C:/Users/megab/Documents/maya/scripts\\dpAutoRigSystem\\Modules\\dpLimb.pyc'>"}}
+{'Limb__dpAR_1:Guide_Base': {displayAnnotation': True, numBendJoints': 5, moduleNamespace': Limb__dpAR_1', hookNode': _Grp', moduleInstanceInfo': <dpAutoRigSystem.Modules.dpLimb.Limb instance at 0x0000012198FD5E08>', rigType': biped', hasBend': True, mirrorName': L --> R', additional': False, guideBase': True, mirrorEnable': True, guideColor': 0, type': 0, mirrorNameList': L --> R;R --> L;T --> B;B --> T;F --> B;B --> F;', degree': 0, articulation': True, style': 0, mirrorAxis': off', shapeSize': 1.0, nJoints': 0, pinGuide': False, customName': None, dpARVersion': 3.11.33', alignWorld': True, pinGuideConstraint': '', guideObjectInfo': u"<module 'dpAutoRigSystem.Modules.dpLimb' from 'C:/Users/megab/Documents/maya/scripts\\dpAutoRigSystem\\Modules\\dpLimb.pyc'>"}}
+
+{Limb__dpAR_1:Guide_Base': 
+    {
+        'fatherMirrorAxis': off',
+        'guideModuleNamespace': Limb__dpAR_1',
+        'fatherModule': Spine',
+        'fatherCustomName': None,
+        'fatherNode': Spine__dpAR_2:Guide_JointLoc1',
+        'parentNode': Spine__dpAR_2:Guide_Base',
+        'guideInstance': dpAR_1', 'guideMirrorAxis': off',
+        'fatherMirrorName': [L_', R_'],
+        'childrenList': [],
+        'fatherGuideLoc': JointLoc1',
+        'guideCustomName': None,
+        'fatherGuide': Spine__dpAR_2:Guide_Base',
+        'fatherInstance': dpAR_2',
+        'guideModuleName': Limb',
+        'guideMirrorName': [L_', R_']
+    },
+Spine__dpAR_2:Guide_Base': 
+    {
+        'fatherMirrorAxis': '',
+        'guideModuleNamespace': Spine__dpAR_2',
+        'fatherModule': '',
+        'fatherCustomName': '',
+        'fatherNode': '',
+        'parentNode': '',
+        'guideInstance': dpAR_2',
+        'guideMirrorAxis': off',
+        'fatherMirrorName': '',
+        'childrenList': [Limb__dpAR_1:Guide_Base'],
+        'fatherGuideLoc': '',
+        'guideCustomName': None,
+        'fatherGuide': '',
+        'fatherInstance': '',
+        'guideModuleName': Spine',
+        'guideMirrorName': [L_', R_']
+    }
+}
+
+Qual children que devo pegar?
+usar listRelatives para buscar os childrens, e filtrar(transforms e nurbsCurve)
+dpAutoRig.py -> setupDuplicatedGuide(função do dpAr para averiguar)
+Como usar o rename da forma correta?
+usar dpBaseClass fn editUserName()
+Como saber qual modulo recriar?
