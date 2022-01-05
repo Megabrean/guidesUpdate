@@ -66,3 +66,14 @@ dpAutoRig.py -> setupDuplicatedGuide(função do dpAr para averiguar)
 Como usar o rename da forma correta?
 usar dpBaseClass fn editUserName()
 Como saber qual modulo recriar?
+
+Levantar os dados
+Duplicar na versão nova
+Deparentear a guia nova
+Renomear guia antiga para old
+Apagar a guia antiga
+Renomear guia atual para mesmo nome da antiga
+Parentear as guias novamente na estrutura antiga
+Atualizar a versão da nova guiaBase (setAttr) version
+Comparar userDefined attr, (setando alguma coisa?) vendo o que é novo
+Listar os novos attr da guia para possível preenchimento.
