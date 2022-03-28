@@ -2,12 +2,16 @@
 # Mudar prints para warnings.
 
 import maya.cmds as cmds
+# import dpAutoRigSystem.dpAutoRig as autoRig
+# reload(autoRig)
+# autoRigUI = autoRig.DP_AutoRig_UI()
 
 def updateGuides():
 
     # ----------
     # FUNCTIONS FROM DPAR
     # ----------
+
     # Function from DpUtils ask how to use when integrate.
     def hook():
         """ Mount a dictionary with guide modules hierarchies.
@@ -93,106 +97,10 @@ def updateGuides():
                     hookDic[item]={"guideModuleNamespace":guideModuleNamespace, "guideModuleName":guideModuleName, "guideInstance":guideInstance, "guideCustomName":guideCustomName, "guideMirrorAxis":guideMirrorAxis, "guideMirrorName":guideMirrorName, "fatherGuide":"", "fatherNode":"", "fatherModule":"", "fatherInstance":"", "fatherCustomName":"", "fatherMirrorAxis":"", "fatherMirrorName":"", "fatherGuideLoc":"", "parentNode":parentNode, "childrenList":[]}
         return hookDic
 
-        """ This method will create a new module instance for a duplicated guide found.
-            Returns a guideBase for a new module instance.
-        """
-        # Duplicating a module guide
-        # print self.langDic[self.langName]['i067_duplicating']
-
-        # declaring variables
-        transformAttrList = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz']
-        nSegmentsAttr = "nJoints"
-        customNameAttr = "customName"
-        mirrorAxisAttr = "mirrorAxis"
-        dispAnnotAttr = "displayAnnotation"
-
-        # unparenting
-        parentList = cmds.listRelatives(selectedItem, parent=True)
-        if parentList:
-            cmds.parent(selectedItem, world=True)
-            selectedItem = selectedItem[selectedItem.rfind("|"):]
-
-        # getting duplicated item values
-        moduleNamespaceValue = cmds.getAttr(selectedItem+"."+"moduleNamespace")
-        moduleInstanceInfoValue = cmds.getAttr(selectedItem+"."+"moduleInstanceInfo")
-        # generating naming values
-        origGuideName = moduleNamespaceValue+":"+"Guide_Base"
-        thatClassName = moduleNamespaceValue.partition("__")[0]
-        thatModuleName = moduleInstanceInfoValue[:moduleInstanceInfoValue.rfind(thatClassName)-1]
-        thatModuleName = thatModuleName[thatModuleName.rfind(".")+1:]
-        moduleDir = moduleInstanceInfoValue[:moduleInstanceInfoValue.rfind(thatModuleName)-1]
-        moduleDir = moduleDir[moduleDir.rfind(".")+1:]
-
-        # initializing a new module instance
-        newGuideInstance = eval('self.initGuide("'+thatModuleName+'", "'+moduleDir+'")')
-        newGuideName = cmds.ls(selection=True)[0]
-        newGuideNamespace = cmds.getAttr(newGuideName+"."+"moduleNamespace")
-        
-        # reset radius as original
-        origRadius = cmds.getAttr(moduleNamespaceValue+":"+"Guide_Base"+"_RadiusCtrl.translateX")
-        cmds.setAttr(newGuideName+"_RadiusCtrl.translateX", origRadius)
-        
-        # getting a good attribute list
-        toSetAttrList = cmds.listAttr(selectedItem)
-        guideBaseAttrIdx = toSetAttrList.index("guideBase")
-        toSetAttrList = toSetAttrList[guideBaseAttrIdx:]
-        toSetAttrList.remove("guideBase")
-        toSetAttrList.remove("moduleNamespace")
-        toSetAttrList.remove(customNameAttr)
-        toSetAttrList.remove(mirrorAxisAttr)
-        
-        # check for special attributes
-        if cmds.objExists(selectedItem+"."+nSegmentsAttr):
-            toSetAttrList.remove(nSegmentsAttr)
-            nJointsValue = cmds.getAttr(selectedItem+'.'+nSegmentsAttr)
-            if nJointsValue > 1:
-                newGuideInstance.changeJointNumber(nJointsValue)
-        if cmds.objExists(selectedItem+"."+customNameAttr):
-            customNameValue = cmds.getAttr(selectedItem+'.'+customNameAttr)
-            if customNameValue != "" and customNameValue != None:
-                newGuideInstance.editUserName(customNameValue)
-        if cmds.objExists(selectedItem+"."+mirrorAxisAttr):
-            mirroirAxisValue = cmds.getAttr(selectedItem+'.'+mirrorAxisAttr)
-            if mirroirAxisValue != "off":
-                newGuideInstance.changeMirror(mirroirAxisValue)
-        if cmds.objExists(selectedItem+"."+dispAnnotAttr):
-            toSetAttrList.remove(dispAnnotAttr)
-            currentDisplayAnnotValue = cmds.getAttr(selectedItem+'.'+dispAnnotAttr)
-            newGuideInstance.displayAnnotation(currentDisplayAnnotValue)
-        
-        # get and set transformations
-        childrenList = cmds.listRelatives(selectedItem, children=True, allDescendents=True, fullPath=True, type="transform")
-        if childrenList:
-            for child in childrenList:
-                if not "|Guide_Base|Guide_Base" in child:
-                    newChild = newGuideNamespace+":"+child[child.rfind("|")+1:]
-                    for transfAttr in transformAttrList:
-                        try:
-                            cmds.setAttr(newChild+"."+transfAttr, cmds.getAttr(child+"."+transfAttr))
-                        except:
-                            pass
-        # set transformation for Guide_Base
-        for transfAttr in transformAttrList:
-            cmds.setAttr(newGuideName+"."+transfAttr, cmds.getAttr(selectedItem+"."+transfAttr))
-        
-        # setting new guide attributes
-        for toSetAttr in toSetAttrList:
-            try:
-                cmds.setAttr(newGuideName+"."+toSetAttr, cmds.getAttr(selectedItem+"."+toSetAttr))
-            except:
-                if cmds.getAttr(selectedItem+"."+toSetAttr):
-                    cmds.setAttr(newGuideName+"."+toSetAttr, cmds.getAttr(selectedItem+"."+toSetAttr), type="string")
-        
-        # parenting correctly
-        if parentList:
-            cmds.parent(newGuideName, parentList[0])
-
-        cmds.delete(selectedItem)
-        return newGuideName
     # ----------
     # END OF FUNCTIONS FROM DPAR
     # ----------
-
+    
     # Remove objects different from transform and nurbscurbe from list.
     def filterNurbsCurveAndTransform(mayaObjList):
         returList = []
@@ -202,7 +110,7 @@ def updateGuides():
                 returList.append(obj)
         return returList
     
-    # Remove _Ant items from list of transforms
+    # Remove _Ant(Anotations) items from list of transforms
     def filterAnt(dpArTransformsList):
         returList = []
         for obj in dpArTransformsList:
@@ -265,10 +173,18 @@ def updateGuides():
                 # print(childrenList)
             else:
                 print('marcar como guia a ser usada')
-    
-    def renameGuides(guidesDictionary):
-        print('rename')
 
+    # RASCUNHO DUPLICA A GUIA NA ORIGEM FALTA PEGAR OS ANTIGOS ATRIBUTOS
+    def duplicateGuides():
+        for guide in guidesDictionary:
+            guideType = guidesDictionary[guide]['guideModuleNamespace'][:guidesDictionary[guide]['guideModuleNamespace'].find('_')]
+            print(guideType)
+            autoRigUI.initGuide("dp"+guideType, "Modules")
+
+    def renameGuides(guidesDictionary):
+        for guide in guidesDictionary:
+            # cmds.rename(guide, guide+"_OLD")
+            print('rename from dpar')
     # Dictionary that will hold data for update
     updateData = {}
     # How to check this on dpAr?
@@ -279,6 +195,7 @@ def updateGuides():
     if len(guidesDictionary) > 0:
         getGuidesData(guidesDictionary)
         renameGuides(guidesDictionary)
+        # duplicateGuides()
     else:
         print('Não há guias na cena')
 
