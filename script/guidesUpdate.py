@@ -89,9 +89,17 @@ def updateGuides():
             autoRigUI.initGuide("dp"+guideType, "Modules")
 
     def renameGuides(guidesDictionary):
+        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        print(instancedModulesStrList)
         for guide in guidesDictionary:
-            # cmds.rename(guide, guide+"_OLD")
-            print('rename from dpar')
+            idxTochange = instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
+            print(idxTochange)
+            currentCustomName = updateData[guide]['attributes']['customName']
+            print(currentCustomName)
+            autoRigUI.modulesToBeRiggedList[idxTochange].editUserName(currentCustomName+'_OLD')
+            
+
+
     # Dictionary that will hold data for update
     updateData = {}
     # How to check this on dpAr?
