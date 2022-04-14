@@ -89,29 +89,35 @@ def updateGuides():
             autoRigUI.initGuide("dp"+guideType, "Modules")
 
     def renameGuides(guidesDictionary):
+        # Verify if modules are loaded to memory
+        if len(autoRigUI.modulesToBeRiggedList) == 0:
+            print('Autorig recarregado')
+            reload(autoRig)
+        
         instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
         print(instancedModulesStrList)
         for guide in guidesDictionary:
             idxTochange = instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
-            print(idxTochange)
             currentCustomName = updateData[guide]['attributes']['customName']
-            print(currentCustomName)
             autoRigUI.modulesToBeRiggedList[idxTochange].editUserName(currentCustomName+'_OLD')
             
 
 
-    # Dictionary that will hold data for update
-    updateData = {}
-    # How to check this on dpAr?
-    currentDpArVersion = '3.13.00'
-    # Receive the guides list from hook function
-    guidesDictionary = autoRig.utils.hook()
-    # If there are guides on the dictionary go on.
-    if len(guidesDictionary) > 0:
-        getGuidesData(guidesDictionary)
-        renameGuides(guidesDictionary)
-        # duplicateGuides()
+    if autoRig:
+        # Dictionary that will hold data for update
+        updateData = {}
+        # How to check this on dpAr?
+        currentDpArVersion = autoRigUI.dpARVersion
+        # Receive the guides list from hook function
+        guidesDictionary = autoRig.utils.hook()
+        # If there are guides on the dictionary go on.
+        if len(guidesDictionary) > 0:
+            getGuidesData(guidesDictionary)
+            renameGuides(guidesDictionary)
+            # duplicateGuides()
+        else:
+            print('Não há guias na cena')
     else:
-        print('Não há guias na cena')
+        print('Start dpAutoRig and Run script again')
 
 updateGuides();
