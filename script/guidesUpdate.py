@@ -1,10 +1,9 @@
-# Arquivo para iniciar a programação
 # Mudar prints para warnings.
+from maya import cmds
 
-import maya.cmds as cmds
-# import dpAutoRigSystem.dpAutoRig as autoRig
-# reload(autoRig)
-# autoRigUI = autoRig.DP_AutoRig_UI()
+def reloadAr():
+    global autoRigUI
+    autoRigUI = autoRig.DP_AutoRig_UI()
 
 def updateGuides():
     
@@ -30,6 +29,12 @@ def updateGuides():
             return cmds.getAttr(baseGuide+'.'+attr, silent=True)
         except:
             return ''
+
+    def setAttrValue(baseGuide, attr, value):
+        try:
+            return cmds.setAttr(baseGuide+'.'+attr, value)
+        except:
+            print('the attr '+attr+' from '+baseGuide+' could not be set.')
     
     # Return a list of attributes, keyable and userDefined
     def keyUserAttrList(objWithAttr):
@@ -49,7 +54,10 @@ def updateGuides():
             return None
 
     # Receive a dictionary with guides and searches for custom attributes and also keyable attributes
-    def getGuidesData(guidesDictionary):
+    def getGuidesData():
+
+        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+
         for baseGuide in guidesDictionary:
             guideVersion = cmds.getAttr(baseGuide+'.dpARVersion', silent=True)
             # print(baseGuide+' version: '+guideVersion)
@@ -62,6 +70,8 @@ def updateGuides():
                 for attribute in guideAttrList:
                     attributeValue = getAttrValue(baseGuide, attribute)
                     updateData[baseGuide]['attributes'][attribute] = attributeValue
+
+                updateData[baseGuide]['idx'] = instancedModulesStrList.index(updateData[baseGuide]['attributes']['moduleInstanceInfo'])
                 
                 updateData[baseGuide]['children'] = {}
                 updateData[baseGuide]['parent'] = getGuideParent(baseGuide)
@@ -78,43 +88,92 @@ def updateGuides():
                         updateData[baseGuide]['children'][child]['attributes'][attribute] = attributeValue
                     # print(updateData[baseGuide]['children'][child]['attributes'])
                 # print(childrenList)
-            else:
-                print('marcar como guia a ser usada, ou seja nao sera atualizada')
 
-    # RASCUNHO DUPLICA A GUIA NA ORIGEM FALTA PEGAR OS ANTIGOS ATRIBUTOS
-    def duplicateGuides():
-        for guide in guidesDictionary:
-            guideType = guidesDictionary[guide]['guideModuleNamespace'][:guidesDictionary[guide]['guideModuleNamespace'].find('_')]
+    def createNewGuides():
+        for guide in updateData:
+            guideType = autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].guideModuleName
             print(guideType)
-            autoRigUI.initGuide("dp"+guideType, "Modules")
+            # create the new guide
+            currentNewGuide = autoRigUI.initGuide("dp"+guideType, "Modules")
+            # rename as it's predecessor
+            guideName = updateData[guide]['attributes']['customName']
+            currentNewGuide.editUserName(guideName)
+            print(currentNewGuide.moduleGrp)
 
-    def renameGuides(guidesDictionary):
-        # Verify if modules are loaded to memory
-        if len(autoRigUI.modulesToBeRiggedList) == 0:
-            print('Autorig recarregado')
-            reload(autoRig)
-        
-        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
-        print(instancedModulesStrList)
-        for guide in guidesDictionary:
-            idxTochange = instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
-            currentCustomName = updateData[guide]['attributes']['customName']
-            autoRigUI.modulesToBeRiggedList[idxTochange].editUserName(currentCustomName+'_OLD')
+            # setAttr section, extract to function
+            newGuideAttrList = keyUserAttrList(currentNewGuide.moduleGrp)
+            print(newGuideAttrList)
+            print(updateData[guide]['attributes'].keys())
+            # if len(newGuideAttrList) != len(updateData[guide]['attributes'].keys()):
+            #     print('guia nova tem novos atributos')
+            # else:
+            #     print('guia nova tem mesmo numero de attr')
+
+            # for attr in newGuideAttrList:
+            #     if attr in newGuideAttrList:
+            #         setAttrValue(currentNewGuide.moduleGrp, attr, updateData[guide]['attributes'][attr])
+            #     else:
+            #         print('The attribute '+attr+' from guide '+guideName+' is not present in its past version')
+                   
+
             
 
+    # Verify if modules are loaded to memory and guarantee they are instanced
+    def checkMemory():
+        print('checking..')
+        if len(autoRigUI.modulesToBeRiggedList) == 0:
+            print('Autorig recarregado instancias nao carregadas')
+            reloadAr()
+            return
+        print('still checking..')
+        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        for guide in updateData:
+            try:
+                instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
+            except:
+                print('Autorig recarregado devido a endereco nao encontrado')
+                reloadAr()
+                return
 
+
+    def renameOldGuides():
+        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        # print(instancedModulesStrList)
+        for guide in updateData:
+            # print(updateData[guide]['attributes']['moduleInstanceInfo'])
+            # idxTochange = instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
+            # print(idxTochange)
+            currentCustomName = updateData[guide]['attributes']['customName']
+            # print(currentCustomName)
+            autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(currentCustomName+'_OLD')
+    
+    def showInfo():
+        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        print(instancedModulesStrList)
+        print(autoRigUI.modulesToBeRiggedList)
+    
+    def setNewGuides():
+        print('maybe not')
+            
     if autoRig:
-        # Dictionary that will hold data for update
+        # Dictionary that will hold data for update, whatever don't need update will not get here
         updateData = {}
-        # How to check this on dpAr?
         currentDpArVersion = autoRigUI.dpARVersion
         # Receive the guides list from hook function
         guidesDictionary = autoRig.utils.hook()
         # If there are guides on the dictionary go on.
         if len(guidesDictionary) > 0:
-            getGuidesData(guidesDictionary)
-            renameGuides(guidesDictionary)
-            # duplicateGuides()
+            # Unica forma encontrada por hora
+            reloadAr()
+            # Get all info nedeed and store in updateData dictionary
+            getGuidesData()
+            # showInfo()
+            # Renomeia guias antigas para _old para poder exclui-las, talvez ja seja possivel pré excluir.. verificar aqui será delete old guides
+            renameOldGuides()
+            # Cria novas guias que serão as atualizadas, ainda faltará preencher atributos
+            createNewGuides()
+            # Depois das guias novas criadas, parentear primeiro, depois setar attr guide and children
+            setNewGuides()
         else:
             print('Não há guias na cena')
     else:
