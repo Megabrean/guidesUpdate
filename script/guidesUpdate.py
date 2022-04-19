@@ -8,7 +8,7 @@ def reloadAr():
 def updateGuides():
     
     # Remove objects different from transform and nurbscurbe from list.
-    def filterNurbsCurveAndTransform(mayaObjList):
+    def filterNotNurbsCurveAndTransform(mayaObjList):
         returList = []
         for obj in mayaObjList:
             objType = cmds.objectType(obj)
@@ -17,24 +17,24 @@ def updateGuides():
         return returList
     
     # Remove _Ant(Anotations) items from list of transforms
-    def filterAnt(dpArTransformsList):
+    def filterAnotation(dpArTransformsList):
         returList = []
         for obj in dpArTransformsList:
             if not '_Ant' in obj:
                 returList.append(obj)
         return returList
 
-    def getAttrValue(baseGuide, attr):
+    def getAttrValue(dpGuide, attr):
         try:
-            return cmds.getAttr(baseGuide+'.'+attr, silent=True)
+            return cmds.getAttr(dpGuide+'.'+attr, silent=True)
         except:
             return ''
 
-    def setAttrValue(baseGuide, attr, value):
+    def setAttrValue(dpGuide, attr, value):
         try:
-            return cmds.setAttr(baseGuide+'.'+attr, value)
+            return cmds.setAttr(dpGuide+'.'+attr, value)
         except:
-            print('the attr '+attr+' from '+baseGuide+' could not be set.')
+            print('the attr '+attr+' from '+dpGuide+' could not be set.')
     
     # Return a list of attributes, keyable and userDefined
     def keyUserAttrList(objWithAttr):
@@ -53,8 +53,14 @@ def updateGuides():
         except:
             return None
 
+    def listChildren(baseGuide):
+        childrenList = cmds.listRelatives(baseGuide, allDescendents=True, children=True, type='transform')
+        childrenList = filterNotNurbsCurveAndTransform(childrenList)
+        childrenList = filterAnotation(childrenList)
+        return childrenList
+
     # Receive a dictionary with guides and searches for custom attributes and also keyable attributes
-    def getGuidesData():
+    def getGuidesToUpdateData():
 
         instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
 
@@ -76,9 +82,7 @@ def updateGuides():
                 updateData[baseGuide]['children'] = {}
                 updateData[baseGuide]['parent'] = getGuideParent(baseGuide)
                 # print(updateData[baseGuide]['parent'])
-                childrenList = cmds.listRelatives(baseGuide, allDescendents=True, children=True, type='transform')
-                childrenList = filterNurbsCurveAndTransform(childrenList)
-                childrenList = filterAnt(childrenList)
+                childrenList = listChildren(baseGuide)
                 for child in childrenList:
                     updateData[baseGuide]['children'][child] = {'attributes': {}}
                     # print(child)
@@ -92,31 +96,12 @@ def updateGuides():
     def createNewGuides():
         for guide in updateData:
             guideType = autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].guideModuleName
-            print(guideType)
             # create the new guide
             currentNewGuide = autoRigUI.initGuide("dp"+guideType, "Modules")
             # rename as it's predecessor
             guideName = updateData[guide]['attributes']['customName']
             currentNewGuide.editUserName(guideName)
-            print(currentNewGuide.moduleGrp)
-
-            # setAttr section, extract to function
-            newGuideAttrList = keyUserAttrList(currentNewGuide.moduleGrp)
-            print(newGuideAttrList)
-            print(updateData[guide]['attributes'].keys())
-            # if len(newGuideAttrList) != len(updateData[guide]['attributes'].keys()):
-            #     print('guia nova tem novos atributos')
-            # else:
-            #     print('guia nova tem mesmo numero de attr')
-
-            # for attr in newGuideAttrList:
-            #     if attr in newGuideAttrList:
-            #         setAttrValue(currentNewGuide.moduleGrp, attr, updateData[guide]['attributes'][attr])
-            #     else:
-            #         print('The attribute '+attr+' from guide '+guideName+' is not present in its past version')
-                   
-
-            
+            updateData[guide]['newGuide'] = currentNewGuide.moduleGrp       
 
     # Verify if modules are loaded to memory and guarantee they are instanced
     def checkMemory():
@@ -135,25 +120,65 @@ def updateGuides():
                 reloadAr()
                 return
 
-
-    def renameOldGuides():
-        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
-        # print(instancedModulesStrList)
-        for guide in updateData:
-            # print(updateData[guide]['attributes']['moduleInstanceInfo'])
-            # idxTochange = instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
-            # print(idxTochange)
-            currentCustomName = updateData[guide]['attributes']['customName']
-            # print(currentCustomName)
-            autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(currentCustomName+'_OLD')
-    
     def showInfo():
         instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
         print(instancedModulesStrList)
         print(autoRigUI.modulesToBeRiggedList)
+
+    def renameOldGuides():
+        for guide in updateData:
+            currentCustomName = updateData[guide]['attributes']['customName']
+            autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(currentCustomName+'_OLD')
     
-    def setNewGuides():
-        print('maybe not')
+    def parentNewGuides():
+        for guide in updateData:
+            hasParent = updateData[guide]['parent']
+            if hasParent != None:
+                newParentBase = updateData[hasParent.split(':')[0]+":Guide_Base"]['newGuide']
+                newParentFinal = newParentBase.split(':')[0]+':'+hasParent.split(':')[1]
+                print('Guia a tentar parentear '+newParentFinal)
+                print('Guia nova '+updateData[guide]['newGuide'])
+                try:
+                    cmds.parent(updateData[guide]['newGuide'], newParentFinal)
+                except:
+                    print('It was not possible to find '+updateData[guide]['newGuide']+' parent.')
+
+    def copyAttrFromGuides(newGuide, oldGuideAttrDic):
+        newGuideAttrList = keyUserAttrList(newGuide)
+        # For each attribute in the new guide check if exists equivalent in the old one, and if is different, in that case
+        # set the old value to the new one.
+        for attr in newGuideAttrList:
+            if attr in oldGuideAttrDic:
+                if attr != oldGuideAttrDic[attr]:
+                    setAttrValue(newGuide, attr, oldGuideAttrDic[attr])
+
+    
+    def setNewBaseGuides():
+        for guide in updateData:
+            copyAttrFromGuides(updateData[guide]['newGuide'], updateData[guide]['attributes'])
+    
+    def filterChildrenFromAnotherBase(childrenList, baseGuide):
+        filteredList = []
+        filterStr = baseGuide.split(':')[0]
+        for children in childrenList:
+            if filterStr in children:
+                filteredList.append(children)
+        return filteredList
+    
+    # ENCONTRAR UMA FORMA DE FILTRAR FILHOS QUE TENHAM OUTRA BASE
+    def setChildrenGuides():
+        for guide in updateData:
+            newGuideChildrenList = listChildren(updateData[guide]['newGuide'])
+            newGuideChildrenList = filterChildrenFromAnotherBase(newGuideChildrenList, updateData[guide]['newGuide'])
+            oldGuideChildrenList = updateData[guide]['children'].keys()
+            oldGuideChildrenList = filterChildrenFromAnotherBase(oldGuideChildrenList, guide)
+            # print(newGuideChildrenList, oldGuideChildrenList)
+            newGuideChildrenOnlyList = map(lambda name : name.split(':')[1], newGuideChildrenList)
+            oldGuideChildrenOnlyList = map(lambda name : name.split(':')[1], oldGuideChildrenList)
+            for i, newChild in enumerate(newGuideChildrenList):
+                if newGuideChildrenOnlyList[i] in oldGuideChildrenOnlyList:
+                    print(newChild, guide.split(':')[0]+':'+newGuideChildrenOnlyList[i])
+                    copyAttrFromGuides(newChild, updateData[guide]['children'][guide.split(':')[0]+':'+newGuideChildrenOnlyList[i]]['attributes'])
             
     if autoRig:
         # Dictionary that will hold data for update, whatever don't need update will not get here
@@ -166,17 +191,20 @@ def updateGuides():
             # Unica forma encontrada por hora
             reloadAr()
             # Get all info nedeed and store in updateData dictionary
-            getGuidesData()
-            # showInfo()
+            getGuidesToUpdateData()
             # Renomeia guias antigas para _old para poder exclui-las, talvez ja seja possivel pré excluir.. verificar aqui será delete old guides
             renameOldGuides()
             # Cria novas guias que serão as atualizadas, ainda faltará preencher atributos
             createNewGuides()
-            # Depois das guias novas criadas, parentear primeiro, depois setar attr guide and children
-            setNewGuides()
+            # Depois das guias novas criadas, parentear primeiro.
+            parentNewGuides()
+            # Set new base guides attr
+            setNewBaseGuides()
+            # Set children attributes
+            setChildrenGuides()
         else:
             print('Não há guias na cena')
     else:
         print('Start dpAutoRig and Run script again')
 
-updateGuides();
+updateGuides()
