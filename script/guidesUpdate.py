@@ -29,12 +29,49 @@ def updateGuides():
             return cmds.getAttr(dpGuide+'.'+attr, silent=True)
         except:
             return ''
+    
+    def getNewGuideInstance(newGuideName):
+        newGuidesNamesList = map(lambda moduleInstance : moduleInstance.moduleGrp, newGuidesInstanceList)
+        currentGuideInstanceIdx = newGuidesNamesList.index(newGuideName)
+        return newGuidesInstanceList[currentGuideInstanceIdx]
+    
+    def translateLimbStyleValue(enumValue):
+        if enumValue == 1:
+            return autoRigUI.langDic[autoRigUI.langName]['m026_biped']
+        elif enumValue == 2:
+            return autoRigUI.langDic[autoRigUI.langName]['m037_quadruped']
+        elif enumValue == 3:
+            return autoRigUI.langDic[autoRigUI.langName]['m043_quadSpring']
+        elif enumValue == 4:
+            return autoRigUI.langDic[autoRigUI.langName]['m155_quadrupedExtra']
+        else:
+            return autoRigUI.langDic[autoRigUI.langName]['m042_default']
+    
+    def translateLimbTypeValue(enumValue):
+        if enumValue == 1:
+            return autoRigUI.langDic[autoRigUI.langName]['m030_leg']
+        else:
+            return autoRigUI.langDic[autoRigUI.langName]['m028_arm']
 
     def setAttrValue(dpGuide, attr, value):
-        try:
-            return cmds.setAttr(dpGuide+'.'+attr, value)
-        except:
-            print('the attr '+attr+' from '+dpGuide+' could not be set.')
+        ignoreList = ['version', 'controlID', 'className', 'direction', 'pinGuideConstraint', 'moduleNamespace', 'customName', 'moduleInstanceInfo', 'hookNode', 'guideObjectInfo', 'rigType', 'dpARVersion']
+        if attr not in ignoreList:
+            if attr == 'nJoints':
+                currentInstance = getNewGuideInstance(dpGuide)
+                currentInstance.changeJointNumber(value)
+            elif attr == 'style':
+                currentInstance = getNewGuideInstance(dpGuide)
+                expectedValue = translateLimbStyleValue(value)
+                currentInstance.changeStyle(expectedValue)
+            elif attr == 'type':
+                currentInstance = getNewGuideInstance(dpGuide)
+                expectedValue = translateLimbTypeValue(value)
+                currentInstance.changeType(expectedValue)
+            else:
+                try:
+                    return cmds.setAttr(dpGuide+'.'+attr, value)
+                except:
+                    print('the attr '+attr+' from '+dpGuide+' could not be set.')
     
     # Return a list of attributes, keyable and userDefined
     def keyUserAttrList(objWithAttr):
@@ -101,7 +138,8 @@ def updateGuides():
             # rename as it's predecessor
             guideName = updateData[guide]['attributes']['customName']
             currentNewGuide.editUserName(guideName)
-            updateData[guide]['newGuide'] = currentNewGuide.moduleGrp       
+            updateData[guide]['newGuide'] = currentNewGuide.moduleGrp
+            newGuidesInstanceList.append(currentNewGuide)
 
     # Verify if modules are loaded to memory and guarantee they are instanced
     def checkMemory():
@@ -136,8 +174,6 @@ def updateGuides():
             if hasParent != None:
                 newParentBase = updateData[hasParent.split(':')[0]+":Guide_Base"]['newGuide']
                 newParentFinal = newParentBase.split(':')[0]+':'+hasParent.split(':')[1]
-                print('Guia a tentar parentear '+newParentFinal)
-                print('Guia nova '+updateData[guide]['newGuide'])
                 try:
                     cmds.parent(updateData[guide]['newGuide'], newParentFinal)
                 except:
@@ -149,7 +185,8 @@ def updateGuides():
         # set the old value to the new one.
         for attr in newGuideAttrList:
             if attr in oldGuideAttrDic:
-                if attr != oldGuideAttrDic[attr]:
+                currentValue = getAttrValue(newGuide, attr)
+                if currentValue != oldGuideAttrDic[attr]:
                     setAttrValue(newGuide, attr, oldGuideAttrDic[attr])
 
     
@@ -165,7 +202,7 @@ def updateGuides():
                 filteredList.append(children)
         return filteredList
     
-    # ENCONTRAR UMA FORMA DE FILTRAR FILHOS QUE TENHAM OUTRA BASE
+    # Set all attributes from children with same BaseGuide to avoid double set
     def setChildrenGuides():
         for guide in updateData:
             newGuideChildrenList = listChildren(updateData[guide]['newGuide'])
@@ -177,7 +214,7 @@ def updateGuides():
             oldGuideChildrenOnlyList = map(lambda name : name.split(':')[1], oldGuideChildrenList)
             for i, newChild in enumerate(newGuideChildrenList):
                 if newGuideChildrenOnlyList[i] in oldGuideChildrenOnlyList:
-                    print(newChild, guide.split(':')[0]+':'+newGuideChildrenOnlyList[i])
+                    # print(newChild, guide.split(':')[0]+':'+newGuideChildrenOnlyList[i])
                     copyAttrFromGuides(newChild, updateData[guide]['children'][guide.split(':')[0]+':'+newGuideChildrenOnlyList[i]]['attributes'])
             
     if autoRig:
@@ -186,6 +223,7 @@ def updateGuides():
         currentDpArVersion = autoRigUI.dpARVersion
         # Receive the guides list from hook function
         guidesDictionary = autoRig.utils.hook()
+        newGuidesInstanceList = []
         # If there are guides on the dictionary go on.
         if len(guidesDictionary) > 0:
             # Unica forma encontrada por hora
@@ -208,3 +246,6 @@ def updateGuides():
         print('Start dpAutoRig and Run script again')
 
 updateGuides()
+
+# CORRIGIR SEGMENTOS DOS FKLINES E VERIFICAR SETS DOS LIMBS, NA VERDADE TODAS AS GUIAS
+# VERIFICAR QUANDO A GUIA NÃO TEM USERNAME.. TRATAR

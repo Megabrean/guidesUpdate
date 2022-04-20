@@ -1,8 +1,22 @@
-([u'Head__dpAR_26:Guide_Base_RadiusCtrl', u'Head__dpAR_26:Guide_UpperLip', u'Head__dpAR_26:Guide_UpperHead', u'Head__dpAR_26:Guide_UpperJaw', u'Head__dpAR_26:Guide_JointEnd', u'Head__dpAR_26:Guide_Chew', u'Head__dpAR_26:Guide_LowerLip', u'Head__dpAR_26:Guide_Chin', u'Head__dpAR_26:Guide_LCornerLip', u'Head__dpAR_26:Guide_RCornerLip', u'Head__dpAR_26:Guide_Jaw', u'Head__dpAR_26:Guide_Head', u'Head__dpAR_26:Guide_Neck0'],
+# from dpAutoRigSystem.Extras import dpSelectAllControls
 
-[u'Head__dpAR_2:Guide_Base_RadiusCtrl', u'Head__dpAR_2:Guide_Chin', u'Head__dpAR_2:Guide_Neck', u'Head__dpAR_2:Guide_RCornerLip', u'Head__dpAR_2:Guide_LowerLip', u'Head__dpAR_2:Guide_UpperHead', u'Head__dpAR_2:Guide_UpperLip', u'Head__dpAR_2:Guide_LCornerLip', u'Head__dpAR_2:Guide_Jaw', u'Head__dpAR_2:Guide_Head', u'Head__dpAR_2:Guide_UpperJaw', u'Head__dpAR_2:Guide_JointEnd', u'Head__dpAR_2:Guide_Chew'])
+# autoRig.rigInfo.UpdateRigInfo.updateRigInfoLists()
+# myVar = dpSelectAllControls.SelectAllControls(autoRigUI, autoRigUI.langName, autoRigUI.langDic)
 
+# mylist = [10,2,3]
+# print(mylist[0])
 
-([u'Spine__dpAR_27:Guide_Base_RadiusCtrl', u'Spine__dpAR_27:Guide_JointLoc2', u'Spine__dpAR_27:Guide_JointLoc2_Grp', u'Spine__dpAR_27:Guide_JointEnd', u'Spine__dpAR_27:Guide_JointLoc3', u'Spine__dpAR_27:Guide_JointLoc3_Grp', u'Spine__dpAR_27:Guide_JointLoc1'],
+class Carro():
+    def __init__(eumesmo) -> None:
+        eumesmo.velocidade = 0
 
-[u'Spine__dpAR_1:Guide_Base_RadiusCtrl', u'Spine__dpAR_1:Guide_JointLoc2_Grp', u'Spine__dpAR_1:Guide_JointLoc2', u'Spine__dpAR_1:Guide_JointLoc3', u'Spine__dpAR_1:Guide_JointLoc3_Grp', u'Spine__dpAR_1:Guide_JointEnd', u'Spine__dpAR_1:Guide_JointLoc1'])
+    def acelerar(eumesmo):
+        eumesmo.velocidade += 1
+    
+
+uno = Carro()
+gol = Carro()
+
+uno.acelerar()
+print("Velocidade do Uno "+str(uno.velocidade))
+print("Velocidade do Gol "+str(gol.velocidade))
