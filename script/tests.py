@@ -6,17 +6,21 @@
 # mylist = [10,2,3]
 # print(mylist[0])
 
-class Carro():
-    def __init__(eumesmo) -> None:
-        eumesmo.velocidade = 0
+# class Carro():
+#     def __init__(eumesmo) -> None:
+#         eumesmo.velocidade = 0
 
-    def acelerar(eumesmo):
-        eumesmo.velocidade += 1
+#     def acelerar(eumesmo):
+#         eumesmo.velocidade += 1
     
 
-uno = Carro()
-gol = Carro()
+# uno = Carro()
+# gol = Carro()
 
-uno.acelerar()
-print("Velocidade do Uno "+str(uno.velocidade))
-print("Velocidade do Gol "+str(gol.velocidade))
+# uno.acelerar()
+# print("Velocidade do Uno "+str(uno.velocidade))
+# print("Velocidade do Gol "+str(gol.velocidade))
+
+listToSort = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'moduleNamespace', 'customName', 'mirrorAxis', 'mirrorName', 'mirrorNameList', 'hookNode', 'moduleInstanceInfo', 'guideObjectInfo', 'rigType', 'dpARVersion']
+listToSort.sort()
+print(listToSort)

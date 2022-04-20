@@ -67,6 +67,12 @@ def updateGuides():
                 currentInstance = getNewGuideInstance(dpGuide)
                 expectedValue = translateLimbTypeValue(value)
                 currentInstance.changeType(expectedValue)
+            elif attr == 'mirrorAxis':
+                currentInstance = getNewGuideInstance(dpGuide)
+                currentInstance.changeMirror(value)
+            elif attr == 'mirrorName':
+                currentInstance = getNewGuideInstance(dpGuide)
+                currentInstance.changeMirrorName(value)
             else:
                 try:
                     return cmds.setAttr(dpGuide+'.'+attr, value)
@@ -103,7 +109,6 @@ def updateGuides():
 
         for baseGuide in guidesDictionary:
             guideVersion = cmds.getAttr(baseGuide+'.dpARVersion', silent=True)
-            # print(baseGuide+' version: '+guideVersion)
             if guideVersion != currentDpArVersion:
                 # Create the database holder where the key is the baseGuide
                 updateData[baseGuide] = {}
@@ -118,17 +123,15 @@ def updateGuides():
                 
                 updateData[baseGuide]['children'] = {}
                 updateData[baseGuide]['parent'] = getGuideParent(baseGuide)
-                # print(updateData[baseGuide]['parent'])
                 childrenList = listChildren(baseGuide)
                 for child in childrenList:
                     updateData[baseGuide]['children'][child] = {'attributes': {}}
-                    # print(child)
                     guideAttrList = keyUserAttrList(child)
                     for attribute in guideAttrList:
                         attributeValue = getAttrValue(child, attribute)
                         updateData[baseGuide]['children'][child]['attributes'][attribute] = attributeValue
-                    # print(updateData[baseGuide]['children'][child]['attributes'])
-                # print(childrenList)
+            else:
+                print('Mark guide to be used, how??')
 
     def createNewGuides():
         for guide in updateData:
@@ -166,7 +169,10 @@ def updateGuides():
     def renameOldGuides():
         for guide in updateData:
             currentCustomName = updateData[guide]['attributes']['customName']
-            autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(currentCustomName+'_OLD')
+            if currentCustomName == '' or currentCustomName == None:
+                autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].moduleGrp.split(':')[0]+'_OLD')
+            else:
+                autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(currentCustomName+'_OLD')
     
     def parentNewGuides():
         for guide in updateData:
@@ -178,9 +184,16 @@ def updateGuides():
                     cmds.parent(updateData[guide]['newGuide'], newParentFinal)
                 except:
                     print('It was not possible to find '+updateData[guide]['newGuide']+' parent.')
+    
+    def sendTransformsToListEnd(elementList):
+        toMoveList = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ']
+        for element in toMoveList:
+            elementList.append(elementList.pop(elementList.index(element)))
 
     def copyAttrFromGuides(newGuide, oldGuideAttrDic):
         newGuideAttrList = keyUserAttrList(newGuide)
+        if 'translateX' in newGuideAttrList and 'rotateX' in newGuideAttrList:
+            sendTransformsToListEnd(newGuideAttrList)
         # For each attribute in the new guide check if exists equivalent in the old one, and if is different, in that case
         # set the old value to the new one.
         for attr in newGuideAttrList:
@@ -209,12 +222,10 @@ def updateGuides():
             newGuideChildrenList = filterChildrenFromAnotherBase(newGuideChildrenList, updateData[guide]['newGuide'])
             oldGuideChildrenList = updateData[guide]['children'].keys()
             oldGuideChildrenList = filterChildrenFromAnotherBase(oldGuideChildrenList, guide)
-            # print(newGuideChildrenList, oldGuideChildrenList)
             newGuideChildrenOnlyList = map(lambda name : name.split(':')[1], newGuideChildrenList)
             oldGuideChildrenOnlyList = map(lambda name : name.split(':')[1], oldGuideChildrenList)
             for i, newChild in enumerate(newGuideChildrenList):
                 if newGuideChildrenOnlyList[i] in oldGuideChildrenOnlyList:
-                    # print(newChild, guide.split(':')[0]+':'+newGuideChildrenOnlyList[i])
                     copyAttrFromGuides(newChild, updateData[guide]['children'][guide.split(':')[0]+':'+newGuideChildrenOnlyList[i]]['attributes'])
             
     if autoRig:
@@ -248,4 +259,3 @@ def updateGuides():
 updateGuides()
 
 # CORRIGIR SEGMENTOS DOS FKLINES E VERIFICAR SETS DOS LIMBS, NA VERDADE TODAS AS GUIAS
-# VERIFICAR QUANDO A GUIA NÃO TEM USERNAME.. TRATAR
