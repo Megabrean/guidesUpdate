@@ -131,7 +131,8 @@ def updateGuides():
                         attributeValue = getAttrValue(child, attribute)
                         updateData[baseGuide]['children'][child]['attributes'][attribute] = attributeValue
             else:
-                print('Mark guide to be used, how??')
+                # Dictionary where the keys are the guides to possible reparent and values are its current parent
+                guidesToReParentDict[baseGuide] = getGuideParent(baseGuide)
 
     def createNewGuides():
         for guide in updateData:
@@ -173,17 +174,38 @@ def updateGuides():
                 autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].moduleGrp.split(':')[0]+'_OLD')
             else:
                 autoRigUI.modulesToBeRiggedList[updateData[guide]['idx']].editUserName(currentCustomName+'_OLD')
-    
+
+    def retrieveNewParent(currentParent):
+        currentParentBase = currentParent.split(':')[0]+":Guide_Base"
+        if currentParentBase in updateData.keys():
+            newParentBase = updateData[currentParentBase]['newGuide']
+            newParentFinal = newParentBase.split(':')[0]+':'+currentParent.split(':')[1]
+            return newParentFinal
+        else:
+            return currentParent
+
     def parentNewGuides():
         for guide in updateData:
             hasParent = updateData[guide]['parent']
             if hasParent != None:
-                newParentBase = updateData[hasParent.split(':')[0]+":Guide_Base"]['newGuide']
-                newParentFinal = newParentBase.split(':')[0]+':'+hasParent.split(':')[1]
+                newParentFinal = retrieveNewParent(hasParent)
                 try:
                     cmds.parent(updateData[guide]['newGuide'], newParentFinal)
                 except:
                     print('It was not possible to find '+updateData[guide]['newGuide']+' parent.')
+
+    def parentRetainGuides():
+        if len(guidesToReParentDict) > 0:
+            for retainGuide in guidesToReParentDict:
+                hasParent = guidesToReParentDict[retainGuide]
+                if hasParent != None:
+                    print(hasParent)
+                    newParentFinal = retrieveNewParent(hasParent)
+                    print(newParentFinal)
+                    try:
+                        cmds.parent(retainGuide, newParentFinal)
+                    except:
+                        print('It was not possible to parent '+retainGuide)
     
     def sendTransformsToListEnd(elementList):
         toMoveList = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ']
@@ -235,6 +257,7 @@ def updateGuides():
         # Receive the guides list from hook function
         guidesDictionary = autoRig.utils.hook()
         newGuidesInstanceList = []
+        guidesToReParentDict = {}
         # If there are guides on the dictionary go on.
         if len(guidesDictionary) > 0:
             # Unica forma encontrada por hora
@@ -251,6 +274,8 @@ def updateGuides():
             setNewBaseGuides()
             # Set children attributes
             setChildrenGuides()
+            # After all new guides parented and set reparent old ones that will be used.
+            parentRetainGuides()
         else:
             print('Não há guias na cena')
     else:
