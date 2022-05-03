@@ -229,7 +229,11 @@ def updateGuides():
     
     def setNewBaseGuides():
         for guide in updateData:
-            copyAttrFromGuides(updateData[guide]['newGuide'], updateData[guide]['attributes'])
+            onlyTransformDic = {}
+            for attr in TRANSFORM_LIST:
+                if attr in updateData[guide]['attributes']:
+                    onlyTransformDic[attr] = updateData[guide]['attributes'][attr]
+            copyAttrFromGuides(updateData[guide]['newGuide'], onlyTransformDic)
     
     def filterChildrenFromAnotherBase(childrenList, baseGuide):
         filteredList = []
@@ -262,6 +266,14 @@ def updateGuides():
                 for attr in newAttributesSet:
                     print(attr)
     
+    def setNewNonTransformAttr():
+        nonTransformDic = {}
+        for guide in updateData:
+            for attr in updateData[guide]['attributes']:
+                if attr not in TRANSFORM_LIST:
+                    nonTransformDic[attr] = updateData[guide]['attributes'][attr]
+            copyAttrFromGuides(updateData[guide]['newGuide'], nonTransformDic)
+    
     if autoRig:
         # Dictionary that will hold data for update, whatever don't need update will not get here
         updateData = {}
@@ -270,6 +282,7 @@ def updateGuides():
         guidesDictionary = autoRig.utils.hook()
         newGuidesInstanceList = []
         guidesToReParentDict = {}
+        TRANSFORM_LIST = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ']
         # If there are guides on the dictionary go on.
         if len(guidesDictionary) > 0:
             # Unica forma encontrada por hora
@@ -280,6 +293,8 @@ def updateGuides():
             renameOldGuides()
             # Cria novas guias que serão as atualizadas, ainda faltará preencher atributos
             createNewGuides()
+            # Necessário copiar a guia pois pode precisar de segmento para parentear.
+            setNewNonTransformAttr()
             # Depois das guias novas criadas, parentear primeiro.
             parentNewGuides()
             # Set new base guides attr
