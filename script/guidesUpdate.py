@@ -80,7 +80,7 @@ def updateGuides():
                     print('the attr '+attr+' from '+dpGuide+' could not be set.')
     
     # Return a list of attributes, keyable and userDefined
-    def keyUserAttrList(objWithAttr):
+    def listKeyUserAttr(objWithAttr):
         returnList = []
         keyable = cmds.listAttr(objWithAttr, keyable=True)
         if keyable:
@@ -88,6 +88,8 @@ def updateGuides():
         userAttr = cmds.listAttr(objWithAttr, userDefined=True)
         if userAttr:
             returnList.extend(userAttr)
+        # Guaranty no duplicated attr
+        returnList = list(set(returnList))
         return returnList
     
     def getGuideParent(baseGuide):
@@ -112,7 +114,7 @@ def updateGuides():
             if guideVersion != currentDpArVersion:
                 # Create the database holder where the key is the baseGuide
                 updateData[baseGuide] = {}
-                guideAttrList = keyUserAttrList(baseGuide)
+                guideAttrList = listKeyUserAttr(baseGuide)
                 # Create de attributes dictionary for each baseGuide
                 updateData[baseGuide]['attributes'] = {}
                 for attribute in guideAttrList:
@@ -126,7 +128,7 @@ def updateGuides():
                 childrenList = listChildren(baseGuide)
                 for child in childrenList:
                     updateData[baseGuide]['children'][child] = {'attributes': {}}
-                    guideAttrList = keyUserAttrList(child)
+                    guideAttrList = listKeyUserAttr(child)
                     for attribute in guideAttrList:
                         attributeValue = getAttrValue(child, attribute)
                         updateData[baseGuide]['children'][child]['attributes'][attribute] = attributeValue
@@ -213,7 +215,7 @@ def updateGuides():
             elementList.append(elementList.pop(elementList.index(element)))
 
     def copyAttrFromGuides(newGuide, oldGuideAttrDic):
-        newGuideAttrList = keyUserAttrList(newGuide)
+        newGuideAttrList = listKeyUserAttr(newGuide)
         if 'translateX' in newGuideAttrList and 'rotateX' in newGuideAttrList:
             sendTransformsToListEnd(newGuideAttrList)
         # For each attribute in the new guide check if exists equivalent in the old one, and if is different, in that case
@@ -249,7 +251,17 @@ def updateGuides():
             for i, newChild in enumerate(newGuideChildrenList):
                 if newGuideChildrenOnlyList[i] in oldGuideChildrenOnlyList:
                     copyAttrFromGuides(newChild, updateData[guide]['children'][guide.split(':')[0]+':'+newGuideChildrenOnlyList[i]]['attributes'])
-            
+    
+    def listNewAttr():
+        for guide in updateData:
+            oldGuideSet = set(updateData[guide]['attributes'])
+            newGuideSet = set(listKeyUserAttr(updateData[guide]['newGuide']))
+            newAttributesSet = newGuideSet - oldGuideSet
+            if len(newAttributesSet) > 0:
+                print('The guia '+guide+' has the following new attributes:')
+                for attr in newAttributesSet:
+                    print(attr)
+    
     if autoRig:
         # Dictionary that will hold data for update, whatever don't need update will not get here
         updateData = {}
@@ -276,11 +288,11 @@ def updateGuides():
             setChildrenGuides()
             # After all new guides parented and set reparent old ones that will be used.
             parentRetainGuides()
+            # List new attributes from created guides for possible input
+            listNewAttr()
         else:
             print('Não há guias na cena')
     else:
         print('Start dpAutoRig and Run script again')
 
 updateGuides()
-
-# CORRIGIR SEGMENTOS DOS FKLINES E VERIFICAR SETS DOS LIMBS, NA VERDADE TODAS AS GUIAS

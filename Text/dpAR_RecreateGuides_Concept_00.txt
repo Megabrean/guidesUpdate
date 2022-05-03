@@ -2,12 +2,12 @@ CONCEITO:
 	script para automatizar atualizar as guias do dpAR :)
 
 TO DO: (posteriormente)
-	1 - checar vesões para ver se é necessário recriar a guia listada ou usar ela mesma se for a mesma versão do dpAR atual
-	2 - usar ou não a guia recriada ou a atual da mesma versão do dpAR (religado ao item 1)
+	1 - checar vesões para ver se é necessário recriar a guia listada ou usar ela mesma se for a mesma versão do dpAR atual - OK
+	2 - usar ou não a guia recriada ou a atual da mesma versão do dpAR (religado ao item 1) - OK
 	3 - comparar com um bípede ou outro template para saber se todos os módulos estão compatíveis com o blueprint mais recente?
 	4 - listar elementos ou atributos não encontrados para configurar as novas guias
 	5 - log do que foi atualizado
-	6 - Reportar parâmetros novos que podem precisar de input.
+	6 - Reportar parâmetros novos que podem precisar de input. - OK
 	
 ALGORITMO:
 	verificar se tem guides do dpAR na scene aberta do Maya
