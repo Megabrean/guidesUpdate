@@ -54,6 +54,19 @@ def updateGuides():
             return autoRigUI.langDic[autoRigUI.langName]['m028_arm']
 
     def setAttrValue(dpGuide, attr, value):
+        try:
+            cmds.setAttr(dpGuide+'.'+attr, value)
+        except:
+            print('the attr '+attr+' from '+dpGuide+' could not be set.')
+
+    def setAttrStrValue(dpGuide, attr, value):
+        print(value)
+        try:
+            cmds.setAttr(dpGuide+'.'+attr, value, type='string')
+        except:
+            print('the attr '+attr+' from '+dpGuide+' could not be set.')
+            
+    def setGuideAttributes(dpGuide, attr, value):
         ignoreList = ['version', 'controlID', 'className', 'direction', 'pinGuideConstraint', 'moduleNamespace', 'customName', 'moduleInstanceInfo', 'hookNode', 'guideObjectInfo', 'rigType', 'dpARVersion']
         if attr not in ignoreList:
             if attr == 'nJoints':
@@ -73,11 +86,13 @@ def updateGuides():
             elif attr == 'mirrorName':
                 currentInstance = getNewGuideInstance(dpGuide)
                 currentInstance.changeMirrorName(value)
+            elif attr == 'fatherB':
+                if value in updateData:
+                    setAttrStrValue(dpGuide, attr, updateData[value]['newGuide'])
+                else:
+                    setAttrStrValue(dpGuide, attr, value)
             else:
-                try:
-                    return cmds.setAttr(dpGuide+'.'+attr, value)
-                except:
-                    print('the attr '+attr+' from '+dpGuide+' could not be set.')
+                setAttrValue(dpGuide, attr, value)
     
     # Return a list of attributes, keyable and userDefined
     def listKeyUserAttr(objWithAttr):
@@ -104,7 +119,7 @@ def updateGuides():
         childrenList = filterAnotation(childrenList)
         return childrenList
 
-    # Receive a dictionary with guides and searches for custom attributes and also keyable attributes
+    # Scan a dictionary for old guides and gather data needed to update then.
     def getGuidesToUpdateData():
 
         instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
@@ -147,6 +162,7 @@ def updateGuides():
             updateData[guide]['newGuide'] = currentNewGuide.moduleGrp
             newGuidesInstanceList.append(currentNewGuide)
 
+    # THE TWO FOLLOWING FUNCTIONS ARE DEBUG FUNCTIONS WILL BE CLEARED LATER, LEFT HERE FOR LEARNING PURPOSE
     # Verify if modules are loaded to memory and guarantee they are instanced
     def checkMemory():
         print('checking..')
@@ -201,9 +217,7 @@ def updateGuides():
             for retainGuide in guidesToReParentDict:
                 hasParent = guidesToReParentDict[retainGuide]
                 if hasParent != None:
-                    print(hasParent)
                     newParentFinal = retrieveNewParent(hasParent)
-                    print(newParentFinal)
                     try:
                         cmds.parent(retainGuide, newParentFinal)
                     except:
@@ -218,16 +232,15 @@ def updateGuides():
         newGuideAttrList = listKeyUserAttr(newGuide)
         if 'translateX' in newGuideAttrList and 'rotateX' in newGuideAttrList:
             sendTransformsToListEnd(newGuideAttrList)
-        # For each attribute in the new guide check if exists equivalent in the old one, and if is different, in that case
-        # set the old value to the new one.
+        # For each attribute in the new guide check if exists equivalent in the old one, and if its value is different, in that case
+        # set the new guide attr value to the old one.
         for attr in newGuideAttrList:
             if attr in oldGuideAttrDic:
                 currentValue = getAttrValue(newGuide, attr)
                 if currentValue != oldGuideAttrDic[attr]:
-                    setAttrValue(newGuide, attr, oldGuideAttrDic[attr])
+                    setGuideAttributes(newGuide, attr, oldGuideAttrDic[attr])
 
-    
-    def setNewBaseGuides():
+    def setNewBaseGuidesTransAttr():
         for guide in updateData:
             onlyTransformDic = {}
             for attr in TRANSFORM_LIST:
@@ -275,7 +288,7 @@ def updateGuides():
             copyAttrFromGuides(updateData[guide]['newGuide'], nonTransformDic)
     
     if autoRig:
-        # Dictionary that will hold data for update, whatever don't need update will not get here
+        # Dictionary that will hold data for update, whatever don't need update will not be saved
         updateData = {}
         currentDpArVersion = autoRigUI.dpARVersion
         # Receive the guides list from hook function
@@ -285,28 +298,28 @@ def updateGuides():
         TRANSFORM_LIST = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ']
         # If there are guides on the dictionary go on.
         if len(guidesDictionary) > 0:
-            # Unica forma encontrada por hora
+            # Only way sorted for now
             reloadAr()
             # Get all info nedeed and store in updateData dictionary
             getGuidesToUpdateData()
-            # Renomeia guias antigas para _old para poder exclui-las, talvez ja seja possivel pré excluir.. verificar aqui será delete old guides
+            # Rename guides to discard as *_OLD
             renameOldGuides()
-            # Cria novas guias que serão as atualizadas, ainda faltará preencher atributos
+            # Create the new base guides to replace the old ones
             createNewGuides()
-            # Necessário copiar a guia pois pode precisar de segmento para parentear.
+            # Set all attributes except transforms, it's needed for parenting
             setNewNonTransformAttr()
-            # Depois das guias novas criadas, parentear primeiro.
+            # Parent all new guides;
             parentNewGuides()
-            # Set new base guides attr
-            setNewBaseGuides()
-            # Set children attributes
+            # Set new base guides transform attrbutes
+            setNewBaseGuidesTransAttr()
+            # Set all children attributes
             setChildrenGuides()
-            # After all new guides parented and set reparent old ones that will be used.
+            # After all new guides parented and set, reparent old ones that will be used.
             parentRetainGuides()
-            # List new attributes from created guides for possible input
+            # List and print new attributes from created guides for possible input
             listNewAttr()
         else:
-            print('Não há guias na cena')
+            print('There is no guides on the scene')
     else:
         print('Start dpAutoRig and Run script again')
 

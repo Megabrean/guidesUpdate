@@ -10,3 +10,7 @@ def test():
     print(dicSecond, dicPrincipal)
 
 test()
+
+print(type('string'))
+print(type(True))
+print(type(12))
