@@ -1,4 +1,3 @@
-# Mudar prints para warnings.
 from maya import cmds
 
 def reloadAr():
@@ -148,7 +147,6 @@ def updateGuides():
                         attributeValue = getAttrValue(child, attribute)
                         updateData[baseGuide]['children'][child]['attributes'][attribute] = attributeValue
             else:
-                # Dictionary where the keys are the guides to possible reparent and values are its current parent
                 guidesToReParentDict[baseGuide] = getGuideParent(baseGuide)
 
     def createNewGuides():
@@ -160,6 +158,7 @@ def updateGuides():
             guideName = updateData[guide]['attributes']['customName']
             currentNewGuide.editUserName(guideName)
             updateData[guide]['newGuide'] = currentNewGuide.moduleGrp
+            updateData[guide]['guideModuleName'] = guideType
             newGuidesInstanceList.append(currentNewGuide)
 
     # THE TWO FOLLOWING FUNCTIONS ARE DEBUG FUNCTIONS WILL BE CLEARED LATER, LEFT HERE FOR LEARNING PURPOSE
@@ -293,12 +292,15 @@ def updateGuides():
         currentDpArVersion = autoRigUI.dpARVersion
         # Receive the guides list from hook function
         guidesDictionary = autoRig.utils.hook()
+        # List that will hold all new guides instances
         newGuidesInstanceList = []
+        # Dictionary where the keys are the guides that will be used and don't need update
+        # and values are its current parent, this is used to search for possible new parent
         guidesToReParentDict = {}
         TRANSFORM_LIST = ['translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY', 'rotateZ', 'scaleX', 'scaleY', 'scaleZ']
         # If there are guides on the dictionary go on.
         if len(guidesDictionary) > 0:
-            # Only way sorted for now
+            # Only way solved for now
             reloadAr()
             # Get all info nedeed and store in updateData dictionary
             getGuidesToUpdateData()
