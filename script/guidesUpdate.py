@@ -64,6 +64,44 @@ def updateGuides():
             cmds.setAttr(dpGuide+'.'+attr, value, type='string')
         except:
             print('the attr '+attr+' from '+dpGuide+' could not be set.')
+    
+    def setEyelidGuideAttribute(dpGuide, value):
+        currentInstance = getNewGuideInstance(dpGuide)
+        cvUpperEyelidLoc = currentInstance.guideName+"_UpperEyelidLoc"
+        cvLowerEyelidLoc = currentInstance.guideName+"_LowerEyelidLoc"
+        jEyelid = currentInstance.guideName+"_JEyelid"
+        jUpperEyelid = currentInstance.guideName+"_JUpperEyelid"
+        jLowerEyelid = currentInstance.guideName+"_JLowerEyelid"
+        cmds.setAttr(dpGuide+".eyelid", value)
+        cmds.setAttr(cvUpperEyelidLoc+".visibility", value)
+        cmds.setAttr(cvLowerEyelidLoc+".visibility", value)
+        cmds.setAttr(jEyelid+".visibility", value)
+        cmds.setAttr(jUpperEyelid+".visibility", value)
+        cmds.setAttr(jLowerEyelid+".visibility", value)
+
+    def setIrisGuideAttribute(dpGuide, value):
+        currentInstance = getNewGuideInstance(dpGuide)
+        cvIrisLoc = currentInstance.guideName+"_IrisLoc"
+        cmds.setAttr(dpGuide+".iris", value)
+        cmds.setAttr(cvIrisLoc+".visibility", value)
+
+    def setPupilGuideAttribute(dpGuide, value):
+        currentInstance = getNewGuideInstance(dpGuide)
+        cvPupilLoc = currentInstance.guideName+"_PupilLoc"
+        cmds.setAttr(dpGuide+".pupil", value)
+        cmds.setAttr(cvPupilLoc+".visibility", value)
+
+    def setNostrilGuideAttribute(dpGuide, value):
+        currentInstance = getNewGuideInstance(dpGuide)
+        cmds.setAttr(dpGuide+".nostril", value)
+        cmds.setAttr(currentInstance.cvLNostrilLoc+".visibility", value)
+        cmds.setAttr(currentInstance.cvRNostrilLoc+".visibility", value)
+    
+    def checkSetNewGuideToAttr(dpGuide, attr, value):
+        if value in updateData:
+            setAttrStrValue(dpGuide, attr, updateData[value]['newGuide'])
+        else:
+            setAttrStrValue(dpGuide, attr, value)
             
     def setGuideAttributes(dpGuide, attr, value):
         ignoreList = ['version', 'controlID', 'className', 'direction', 'pinGuideConstraint', 'moduleNamespace', 'customName', 'moduleInstanceInfo', 'hookNode', 'guideObjectInfo', 'rigType', 'dpARVersion']
@@ -85,11 +123,23 @@ def updateGuides():
             elif attr == 'mirrorName':
                 currentInstance = getNewGuideInstance(dpGuide)
                 currentInstance.changeMirrorName(value)
-            elif attr == 'fatherB':
-                if value in updateData:
-                    setAttrStrValue(dpGuide, attr, updateData[value]['newGuide'])
-                else:
-                    setAttrStrValue(dpGuide, attr, value)
+            # EYE ATTRIBUTES
+            elif attr == 'eyelid':
+                setEyelidGuideAttribute(dpGuide, value)
+            elif attr == 'iris':
+                setIrisGuideAttribute(dpGuide, value)
+            elif attr == 'pupil':
+                setPupilGuideAttribute(dpGuide, value)
+            elif attr == 'aimDirection':
+                currentInstance = getNewGuideInstance(dpGuide)
+                aimMenuItemList = ['+X', '-X', '+Y', '-Y', '+Z', '-Z']
+                currentInstance.changeAimDirection(aimMenuItemList[value])
+            # NOSE ATTRIBUTES
+            elif attr == 'nostril':
+                setNostrilGuideAttribute(dpGuide, value)
+            # SUSPENSION ATTRIBUTES AND WHEEL ATTRIBUTES
+            elif attr == 'fatherB' or attr == 'geo':
+                checkSetNewGuideToAttr(dpGuide, attr, value)
             else:
                 setAttrValue(dpGuide, attr, value)
     
