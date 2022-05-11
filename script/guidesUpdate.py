@@ -335,6 +335,45 @@ def updateGuides():
                 if attr not in TRANSFORM_LIST:
                     nonTransformDic[attr] = updateData[guide]['attributes'][attr]
             copyAttrFromGuides(updateData[guide]['newGuide'], nonTransformDic)
+
+    def doUpdate(*args):
+        cmds.deleteUI('guidesUpdateWindow', window=True)
+        # Rename guides to discard as *_OLD
+        # renameOldGuides()
+        # # Create the new base guides to replace the old ones
+        # createNewGuides()
+        # # Set all attributes except transforms, it's needed for parenting
+        # setNewNonTransformAttr()
+        # # Parent all new guides;
+        # parentNewGuides()
+        # # Set new base guides transform attrbutes
+        # setNewBaseGuidesTransAttr()
+        # # Set all children attributes
+        # setChildrenGuides()
+        # # After all new guides parented and set, reparent old ones that will be used.
+        # parentRetainGuides()
+        # # List and print new attributes from created guides for possible input
+        # listNewAttr()
+
+    def guidesUpdateUI():
+        cmds.window('guidesUpdateWindow', title="Guides Info")
+        cmds.columnLayout('guidesUpdateBaseColumn', adjustableColumn=1, rowSpacing=10, parent='guidesUpdateWindow')
+        cmds.text(label='Current DPAR Version '+str(currentDpArVersion), align='left', parent='guidesUpdateBaseColumn')
+        if len(updateData) > 0:
+            cmds.rowColumnLayout('guidesUpdateLayoutBase', numberOfColumns=3, columnSpacing=[(1, 0), (2,20), (3,20)], parent='guidesUpdateBaseColumn')
+            cmds.text(label='Transform', align='center', parent='guidesUpdateLayoutBase')
+            cmds.text(label='Custom Name', align='center', parent='guidesUpdateLayoutBase')
+            cmds.text(label='Version', align='center', parent='guidesUpdateLayoutBase')
+            for guide in updateData:
+                cmds.text(label=guide, align='left', parent='guidesUpdateLayoutBase')
+                cmds.text(label=updateData[guide]['attributes']['customName'], align='left', parent='guidesUpdateLayoutBase')
+                cmds.text(label=updateData[guide]['attributes']['dpARVersion'], align='left', parent='guidesUpdateLayoutBase')
+            
+            cmds.button(label='Update Guides', command=doUpdate, backgroundColor=(0.6, 1.0, 0.6), parent='guidesUpdateBaseColumn')
+        else:
+            cmds.text(label='There is no guides to update.', align='left', parent='guidesUpdateBaseColumn')
+
+        cmds.showWindow( 'guidesUpdateWindow' )
     
     if autoRig:
         # Dictionary that will hold data for update, whatever don't need update will not be saved
@@ -354,24 +393,10 @@ def updateGuides():
             reloadAr()
             # Get all info nedeed and store in updateData dictionary
             getGuidesToUpdateData()
-            # Rename guides to discard as *_OLD
-            renameOldGuides()
-            # Create the new base guides to replace the old ones
-            createNewGuides()
-            # Set all attributes except transforms, it's needed for parenting
-            setNewNonTransformAttr()
-            # Parent all new guides;
-            parentNewGuides()
-            # Set new base guides transform attrbutes
-            setNewBaseGuidesTransAttr()
-            # Set all children attributes
-            setChildrenGuides()
-            # After all new guides parented and set, reparent old ones that will be used.
-            parentRetainGuides()
-            # List and print new attributes from created guides for possible input
-            listNewAttr()
+            # Open the UI
+            guidesUpdateUI()
         else:
-            print('There is no guides on the scene')
+            print('There is no guides in the scene')
     else:
         print('Start dpAutoRig and Run script again')
 
