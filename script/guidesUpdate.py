@@ -1,3 +1,5 @@
+from genericpath import exists
+from hashlib import new
 from maya import cmds
 
 def reloadAr():
@@ -5,6 +7,45 @@ def reloadAr():
     autoRigUI = autoRig.DP_AutoRig_UI()
 
 def updateGuides():
+
+    def summaryUI():
+        newData = listNewAttr()
+        cmds.window('updateSummary', title="Update Summary")
+        cmds.columnLayout('updateSummaryBaseColumn', adjustableColumn=1, rowSpacing=10, parent='updateSummary')
+        if newData:
+            cmds.rowColumnLayout('updateSummaryLayoutBase', numberOfColumns=2, columnSpacing=[(1, 0), (2,20)], parent='updateSummaryBaseColumn')
+            cmds.text(label='Guide', align='center', parent='updateSummaryLayoutBase')
+            cmds.text(label='New Attribute', align='center', parent='updateSummaryLayoutBase')
+            for guide in newData:
+                for newAttr in newData[guide]:
+                    cmds.text(label=guide, align='left', parent='updateSummaryLayoutBase')
+                    cmds.text(label=newAttr, align='left', parent='updateSummaryLayoutBase')
+        else:
+            cmds.text(label='There is no new attributes in the updated guides.', align='left', parent='updateSummaryBaseColumn')
+        
+        cmds.button(label='Delete Old Guides', command=doDelete, backgroundColor=(1.0, 0.0, 0.0), parent='updateSummaryBaseColumn')
+        cmds.showWindow( 'updateSummary' )
+
+
+    def guidesUpdateUI():
+        cmds.window('guidesUpdateWindow', title="Guides Info")
+        cmds.columnLayout('guidesUpdateBaseColumn', adjustableColumn=1, rowSpacing=10, parent='guidesUpdateWindow')
+        cmds.text(label='Current DPAR Version '+str(currentDpArVersion), align='left', parent='guidesUpdateBaseColumn')
+        if len(updateData) > 0:
+            cmds.rowColumnLayout('guidesUpdateLayoutBase', numberOfColumns=3, columnSpacing=[(1, 0), (2,20), (3,20)], parent='guidesUpdateBaseColumn')
+            cmds.text(label='Transform', align='center', parent='guidesUpdateLayoutBase')
+            cmds.text(label='Custom Name', align='center', parent='guidesUpdateLayoutBase')
+            cmds.text(label='Version', align='center', parent='guidesUpdateLayoutBase')
+            for guide in updateData:
+                cmds.text(label=guide, align='left', parent='guidesUpdateLayoutBase')
+                cmds.text(label=updateData[guide]['attributes']['customName'], align='left', parent='guidesUpdateLayoutBase')
+                cmds.text(label=updateData[guide]['attributes']['dpARVersion'], align='left', parent='guidesUpdateLayoutBase')
+            
+            cmds.button(label='Update Guides', command=doUpdate, backgroundColor=(0.6, 1.0, 0.6), parent='guidesUpdateBaseColumn')
+        else:
+            cmds.text(label='There is no guides to update.', align='left', parent='guidesUpdateBaseColumn')
+
+        cmds.showWindow( 'guidesUpdateWindow' )
     
     # Remove objects different from transform and nurbscurbe from list.
     def filterNotNurbsCurveAndTransform(mayaObjList):
@@ -30,7 +71,7 @@ def updateGuides():
             return ''
     
     def getNewGuideInstance(newGuideName):
-        newGuidesNamesList = map(lambda moduleInstance : moduleInstance.moduleGrp, newGuidesInstanceList)
+        newGuidesNamesList = list(map(lambda moduleInstance : moduleInstance.moduleGrp, newGuidesInstanceList))
         currentGuideInstanceIdx = newGuidesNamesList.index(newGuideName)
         return newGuidesInstanceList[currentGuideInstanceIdx]
     
@@ -171,7 +212,7 @@ def updateGuides():
     # Scan a dictionary for old guides and gather data needed to update then.
     def getGuidesToUpdateData():
 
-        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        instancedModulesStrList = list(map(str, autoRigUI.modulesToBeRiggedList))
 
         for baseGuide in guidesDictionary:
             guideVersion = cmds.getAttr(baseGuide+'.dpARVersion', silent=True)
@@ -220,7 +261,7 @@ def updateGuides():
             reloadAr()
             return
         print('still checking..')
-        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        instancedModulesStrList = list(map(str, autoRigUI.modulesToBeRiggedList))
         for guide in updateData:
             try:
                 instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
@@ -230,7 +271,7 @@ def updateGuides():
                 return
 
     def showInfo():
-        instancedModulesStrList = map(str, autoRigUI.modulesToBeRiggedList)
+        instancedModulesStrList = list(map(str, autoRigUI.modulesToBeRiggedList))
         print(instancedModulesStrList)
         print(autoRigUI.modulesToBeRiggedList)
 
@@ -312,21 +353,29 @@ def updateGuides():
             newGuideChildrenList = filterChildrenFromAnotherBase(newGuideChildrenList, updateData[guide]['newGuide'])
             oldGuideChildrenList = updateData[guide]['children'].keys()
             oldGuideChildrenList = filterChildrenFromAnotherBase(oldGuideChildrenList, guide)
-            newGuideChildrenOnlyList = map(lambda name : name.split(':')[1], newGuideChildrenList)
-            oldGuideChildrenOnlyList = map(lambda name : name.split(':')[1], oldGuideChildrenList)
+            newGuideChildrenOnlyList = list(map(lambda name : name.split(':')[1], newGuideChildrenList))
+            oldGuideChildrenOnlyList = list(map(lambda name : name.split(':')[1], oldGuideChildrenList))
             for i, newChild in enumerate(newGuideChildrenList):
                 if newGuideChildrenOnlyList[i] in oldGuideChildrenOnlyList:
                     copyAttrFromGuides(newChild, updateData[guide]['children'][guide.split(':')[0]+':'+newGuideChildrenOnlyList[i]]['attributes'])
     
+    # List new attributes from created guides for possible input.
     def listNewAttr():
+        newDataDic = {}
         for guide in updateData:
             oldGuideSet = set(updateData[guide]['attributes'])
             newGuideSet = set(listKeyUserAttr(updateData[guide]['newGuide']))
             newAttributesSet = newGuideSet - oldGuideSet
             if len(newAttributesSet) > 0:
-                print('The guia '+guide+' has the following new attributes:')
                 for attr in newAttributesSet:
-                    print(attr)
+                    if guide in newDataDic:
+                        newDataDic[guide].append(attr)
+                    else:
+                        newDataDic[guide] = [attr]
+        if len(newDataDic.keys()) == 0:
+            return False
+        else:
+            return newDataDic
     
     def setNewNonTransformAttr():
         nonTransformDic = {}
@@ -336,51 +385,43 @@ def updateGuides():
                     nonTransformDic[attr] = updateData[guide]['attributes'][attr]
             copyAttrFromGuides(updateData[guide]['newGuide'], nonTransformDic)
 
+    def doDelete(*args):
+        cmds.deleteUI('updateSummary', window=True)
+        for guide in updateData:
+            try:
+                cmds.parent(guide, world=True)
+            except Exception as e:
+                print(e)
+        cmds.delete(*updateData.keys())
+
+        reloadAr()
+
+
     def doUpdate(*args):
         cmds.deleteUI('guidesUpdateWindow', window=True)
         # Rename guides to discard as *_OLD
-        # renameOldGuides()
-        # # Create the new base guides to replace the old ones
-        # createNewGuides()
-        # # Set all attributes except transforms, it's needed for parenting
-        # setNewNonTransformAttr()
-        # # Parent all new guides;
-        # parentNewGuides()
-        # # Set new base guides transform attrbutes
-        # setNewBaseGuidesTransAttr()
-        # # Set all children attributes
-        # setChildrenGuides()
-        # # After all new guides parented and set, reparent old ones that will be used.
-        # parentRetainGuides()
-        # # List and print new attributes from created guides for possible input
-        # listNewAttr()
-
-    def guidesUpdateUI():
-        cmds.window('guidesUpdateWindow', title="Guides Info")
-        cmds.columnLayout('guidesUpdateBaseColumn', adjustableColumn=1, rowSpacing=10, parent='guidesUpdateWindow')
-        cmds.text(label='Current DPAR Version '+str(currentDpArVersion), align='left', parent='guidesUpdateBaseColumn')
-        if len(updateData) > 0:
-            cmds.rowColumnLayout('guidesUpdateLayoutBase', numberOfColumns=3, columnSpacing=[(1, 0), (2,20), (3,20)], parent='guidesUpdateBaseColumn')
-            cmds.text(label='Transform', align='center', parent='guidesUpdateLayoutBase')
-            cmds.text(label='Custom Name', align='center', parent='guidesUpdateLayoutBase')
-            cmds.text(label='Version', align='center', parent='guidesUpdateLayoutBase')
-            for guide in updateData:
-                cmds.text(label=guide, align='left', parent='guidesUpdateLayoutBase')
-                cmds.text(label=updateData[guide]['attributes']['customName'], align='left', parent='guidesUpdateLayoutBase')
-                cmds.text(label=updateData[guide]['attributes']['dpARVersion'], align='left', parent='guidesUpdateLayoutBase')
-            
-            cmds.button(label='Update Guides', command=doUpdate, backgroundColor=(0.6, 1.0, 0.6), parent='guidesUpdateBaseColumn')
-        else:
-            cmds.text(label='There is no guides to update.', align='left', parent='guidesUpdateBaseColumn')
-
-        cmds.showWindow( 'guidesUpdateWindow' )
+        renameOldGuides()
+        # Create the new base guides to replace the old ones
+        createNewGuides()
+        # Set all attributes except transforms, it's needed for parenting
+        setNewNonTransformAttr()
+        # Parent all new guides;
+        parentNewGuides()
+        # Set new base guides transform attrbutes
+        setNewBaseGuidesTransAttr()
+        # Set all children attributes
+        setChildrenGuides()
+        # After all new guides parented and set, reparent old ones that will be used.
+        parentRetainGuides()
+        # Calls for summary window
+        summaryUI()
     
     if autoRig:
         # Dictionary that will hold data for update, whatever don't need update will not be saved
         updateData = {}
         currentDpArVersion = autoRigUI.dpARVersion
         # Receive the guides list from hook function
-        guidesDictionary = autoRig.utils.hook()
+        guidesDictionary = autoRig.dpUtils.hook()
         # List that will hold all new guides instances
         newGuidesInstanceList = []
         # Dictionary where the keys are the guides that will be used and don't need update
