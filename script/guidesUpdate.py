@@ -1,5 +1,3 @@
-from genericpath import exists
-from hashlib import new
 from maya import cmds
 
 def reloadAr():
@@ -416,7 +414,7 @@ def updateGuides():
         # Calls for summary window
         summaryUI()
     
-    if autoRig:
+    if "autoRig" in dir():
         # Dictionary that will hold data for update, whatever don't need update will not be saved
         updateData = {}
         currentDpArVersion = autoRigUI.dpARVersion
