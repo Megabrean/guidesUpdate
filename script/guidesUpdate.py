@@ -434,10 +434,10 @@ def updateGuides():
             reloadAr()
             # Get all info nedeed and store in updateData dictionary
             getGuidesToUpdateData()
-            # Open the UI
-            guidesUpdateUI()
         else:
             print('There is no guides in the scene')
+         # Open the UI
+        guidesUpdateUI()
     else:
         print('Start dpAutoRig and Run script again')
 
