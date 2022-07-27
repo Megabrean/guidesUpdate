@@ -1,5 +1,7 @@
 from maya import cmds
 
+dpAR = "autoRig" in dir()
+
 def reloadAr():
     global autoRigUI
     autoRigUI = autoRig.DP_AutoRig_UI()
@@ -414,7 +416,7 @@ def updateGuides():
         # Calls for summary window
         summaryUI()
     
-    if "autoRig" in dir():
+    if dpAR:
         # Dictionary that will hold data for update, whatever don't need update will not be saved
         updateData = {}
         currentDpArVersion = autoRigUI.dpARVersion
