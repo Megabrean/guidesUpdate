@@ -46,6 +46,11 @@ def updateGuides():
             cmds.text(label='There is no guides to update.', align='left', parent='guidesUpdateBaseColumn')
 
         cmds.showWindow( 'guidesUpdateWindow' )
+
+    def setProgressBar(progressAmount, status):
+        print(progressAmount)
+        print(status)
+        cmds.progressWindow(edit=True, progress=progressAmount, status=status, isInterruptable=False)
     
     # Remove objects different from transform and nurbscurbe from list.
     def filterNotNurbsCurveAndTransform(mayaObjList):
@@ -209,7 +214,7 @@ def updateGuides():
         childrenList = filterAnotation(childrenList)
         return childrenList
 
-    # Scan a dictionary for old guides and gather data needed to update then.
+    # Scan a dictionary for old guides and gather data needed to update them.
     def getGuidesToUpdateData():
 
         instancedModulesStrList = list(map(str, autoRigUI.modulesToBeRiggedList))
@@ -251,29 +256,6 @@ def updateGuides():
             updateData[guide]['newGuide'] = currentNewGuide.moduleGrp
             updateData[guide]['guideModuleName'] = guideType
             newGuidesInstanceList.append(currentNewGuide)
-
-    # THE TWO FOLLOWING FUNCTIONS ARE DEBUG FUNCTIONS WILL BE CLEARED LATER, LEFT HERE FOR LEARNING PURPOSE
-    # Verify if modules are loaded to memory and guarantee they are instanced
-    def checkMemory():
-        print('checking..')
-        if len(autoRigUI.modulesToBeRiggedList) == 0:
-            print('Autorig recarregado instancias nao carregadas')
-            reloadAr()
-            return
-        print('still checking..')
-        instancedModulesStrList = list(map(str, autoRigUI.modulesToBeRiggedList))
-        for guide in updateData:
-            try:
-                instancedModulesStrList.index(updateData[guide]['attributes']['moduleInstanceInfo'])
-            except:
-                print('Autorig recarregado devido a endereco nao encontrado')
-                reloadAr()
-                return
-
-    def showInfo():
-        instancedModulesStrList = list(map(str, autoRigUI.modulesToBeRiggedList))
-        print(instancedModulesStrList)
-        print(autoRigUI.modulesToBeRiggedList)
 
     def renameOldGuides():
         for guide in updateData:
@@ -399,20 +381,31 @@ def updateGuides():
 
     def doUpdate(*args):
         cmds.deleteUI('guidesUpdateWindow', window=True)
+        # Starts progress bar feedback
+        cmds.progressWindow(title='Operation Progress', progress=0, maxValue=7, status='Renaming old guides')
         # Rename guides to discard as *_OLD
         renameOldGuides()
+        setProgressBar(1, 'Creating new guides')
         # Create the new base guides to replace the old ones
         createNewGuides()
+        setProgressBar(2, 'Setting some attributes')
         # Set all attributes except transforms, it's needed for parenting
         setNewNonTransformAttr()
+        setProgressBar(3, 'Parenting new guides')
         # Parent all new guides;
         parentNewGuides()
+        setProgressBar(4, 'Setting transform attributes')
         # Set new base guides transform attrbutes
         setNewBaseGuidesTransAttr()
+        setProgressBar(5, 'Setting child guides')
         # Set all children attributes
         setChildrenGuides()
+        setProgressBar(6, 'Parenting remaining guides')
         # After all new guides parented and set, reparent old ones that will be used.
         parentRetainGuides()
+        setProgressBar(7, 'Finished')
+        # Ends progress bar feedback
+        cmds.progressWindow(endProgress=True)
         # Calls for summary window
         summaryUI()
     
