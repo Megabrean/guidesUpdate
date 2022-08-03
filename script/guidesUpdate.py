@@ -27,25 +27,25 @@ def updateGuides():
         cmds.showWindow( 'updateSummary' )
 
 
-    def guidesUpdateUI():
-        cmds.window('guidesUpdateWindow', title="Guides Info")
-        cmds.columnLayout('guidesUpdateBaseColumn', adjustableColumn=1, rowSpacing=10, parent='guidesUpdateWindow')
-        cmds.text(label='Current DPAR Version '+str(currentDpArVersion), align='left', parent='guidesUpdateBaseColumn')
+    def updateGuidesUI():
+        cmds.window('updateGuidesWindow', title="Guides Info")
+        cmds.columnLayout('updateGuidesBaseColumn', adjustableColumn=1, rowSpacing=10, parent='updateGuidesWindow')
+        cmds.text(label='Current DPAR Version '+str(currentDpArVersion), align='left', parent='updateGuidesBaseColumn')
         if len(updateData) > 0:
-            cmds.rowColumnLayout('guidesUpdateLayoutBase', numberOfColumns=3, columnSpacing=[(1, 0), (2,20), (3,20)], parent='guidesUpdateBaseColumn')
-            cmds.text(label='Transform', align='center', parent='guidesUpdateLayoutBase')
-            cmds.text(label='Custom Name', align='center', parent='guidesUpdateLayoutBase')
-            cmds.text(label='Version', align='center', parent='guidesUpdateLayoutBase')
+            cmds.rowColumnLayout('updateGuidesLayoutBase', numberOfColumns=3, columnSpacing=[(1, 0), (2,20), (3,20)], parent='updateGuidesBaseColumn')
+            cmds.text(label='Transform', align='center', parent='updateGuidesLayoutBase')
+            cmds.text(label='Custom Name', align='center', parent='updateGuidesLayoutBase')
+            cmds.text(label='Version', align='center', parent='updateGuidesLayoutBase')
             for guide in updateData:
-                cmds.text(label=guide, align='left', parent='guidesUpdateLayoutBase')
-                cmds.text(label=updateData[guide]['attributes']['customName'], align='left', parent='guidesUpdateLayoutBase')
-                cmds.text(label=updateData[guide]['attributes']['dpARVersion'], align='left', parent='guidesUpdateLayoutBase')
+                cmds.text(label=guide, align='left', parent='updateGuidesLayoutBase')
+                cmds.text(label=updateData[guide]['attributes']['customName'], align='left', parent='updateGuidesLayoutBase')
+                cmds.text(label=updateData[guide]['attributes']['dpARVersion'], align='left', parent='updateGuidesLayoutBase')
             
-            cmds.button(label='Update Guides', command=doUpdate, backgroundColor=(0.6, 1.0, 0.6), parent='guidesUpdateBaseColumn')
+            cmds.button(label='Update Guides', command=doUpdate, backgroundColor=(0.6, 1.0, 0.6), parent='updateGuidesBaseColumn')
         else:
-            cmds.text(label='There is no guides to update.', align='left', parent='guidesUpdateBaseColumn')
+            cmds.text(label='There is no guides to update.', align='left', parent='updateGuidesBaseColumn')
 
-        cmds.showWindow( 'guidesUpdateWindow' )
+        cmds.showWindow( 'updateGuidesWindow' )
 
     def setProgressBar(progressAmount, status):
         print(progressAmount)
@@ -380,30 +380,30 @@ def updateGuides():
 
 
     def doUpdate(*args):
-        cmds.deleteUI('guidesUpdateWindow', window=True)
+        cmds.deleteUI('updateGuidesWindow', window=True)
         # Starts progress bar feedback
         cmds.progressWindow(title='Operation Progress', progress=0, maxValue=7, status='Renaming old guides')
         # Rename guides to discard as *_OLD
         renameOldGuides()
-        setProgressBar(1, 'Creating new guides')
+        setProgressBar(1, 'Creating guides')
         # Create the new base guides to replace the old ones
         createNewGuides()
-        setProgressBar(2, 'Setting some attributes')
+        setProgressBar(2, 'Setting attributes')
         # Set all attributes except transforms, it's needed for parenting
         setNewNonTransformAttr()
-        setProgressBar(3, 'Parenting new guides')
+        setProgressBar(3, 'Parenting guides')
         # Parent all new guides;
         parentNewGuides()
-        setProgressBar(4, 'Setting transform attributes')
+        setProgressBar(4, 'Setting transforms')
         # Set new base guides transform attrbutes
         setNewBaseGuidesTransAttr()
         setProgressBar(5, 'Setting child guides')
         # Set all children attributes
         setChildrenGuides()
-        setProgressBar(6, 'Parenting remaining guides')
+        setProgressBar(6, 'Parenting guides')
         # After all new guides parented and set, reparent old ones that will be used.
         parentRetainGuides()
-        setProgressBar(7, 'Finished')
+        setProgressBar(7, 'Finish')
         # Ends progress bar feedback
         cmds.progressWindow(endProgress=True)
         # Calls for summary window
@@ -430,7 +430,7 @@ def updateGuides():
         else:
             print('There is no guides in the scene')
          # Open the UI
-        guidesUpdateUI()
+        updateGuidesUI()
     else:
         print('Start dpAutoRig and Run script again')
 
